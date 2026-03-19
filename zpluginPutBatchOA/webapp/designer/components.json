@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "zpluginPutBatchOA",
+			"type": "VIEW_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "serviacero.custom.plugins.zpluginPutBatchOA.zpluginPutBatchOA",
+			"propertyEditor": "serviacero.custom.plugins.zpluginPutBatchOA.zpluginPutBatchOA.builder.PropertyEditor",
+			"i18n": "serviacero.custom.plugins.zpluginPutBatchOA.zpluginPutBatchOA.i18n.i18n",
+            "productionProcessEnabled": true,
+           "productionProcessTitle": "zpluginPutBatchOA",
+			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER", "OTHER"]
+		}   
+	]
+}
