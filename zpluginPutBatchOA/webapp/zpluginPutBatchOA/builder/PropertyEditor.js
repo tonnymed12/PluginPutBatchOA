@@ -19,22 +19,17 @@ sap.ui.define([
 		addPropertyEditorContent: function(oPropertyFormContainer){
 			var oData = this.getPropertyData();
 			
-			this.addSwitch(oPropertyFormContainer, "backButtonVisible", oData);
-			this.addSwitch(oPropertyFormContainer, "closeButtonVisible", oData);
-						
-			this.addInputField(oPropertyFormContainer, "title", oData);
-			this.addInputField(oPropertyFormContainer, "text", oData);
+			this.addInputField(oPropertyFormContainer, "autoRefresh", oData);
+			this.addInputField(oPropertyFormContainer, "mandante", oData);
 
             oFormContainer = oPropertyFormContainer;
 		},
 		
 		getDefaultPropertyData: function(){
 			return {
-				
-				"backButtonVisible": true,
-				"closeButtonVisible": true,
-                "title": "zpluginPutBatchOA",
-				"text": "zpluginPutBatchOA"
+
+				"autoRefresh": 15,
+				"mandante": "100"
                 
 			};
 		}
