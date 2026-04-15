@@ -10,6 +10,9 @@ sap.ui.define([],
         //  Find material
         MATERIALS : "/material/v1/materials",
 
+        //find header material 
+        HEADER_MATERIAL : "/material/v1/materials/headerDetails",
+
         //  Gets storage locations for a given plant
         STORAGE_LOCATION : "/inventory/v1/storageLocations",
 
@@ -36,7 +39,7 @@ sap.ui.define([],
         ASSEMBLED_COMPONENTS : "assembly/v1/assembledComponents",
 
         //  Find BOM
-        BOMS : "bom/v1/boms",
+        BOMS : "bom/v1/boms", 
 
         
 
