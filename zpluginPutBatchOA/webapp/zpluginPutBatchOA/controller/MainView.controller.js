@@ -502,8 +502,7 @@ sap.ui.define([
                     EndDate: "",
                     UUID: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
                     GoodsReceipt: false,
-                    Quantity: parseFloat(sCantidadLote) || 0,
-                    AmountAllocated: parseFloat(sCantidadLote) || 0
+                    Quantity: parseFloat(sCantidadLote) || 0
                 };
 
                 aBatches.push(oNewBatch);
@@ -568,14 +567,10 @@ sap.ui.define([
             if (!oBatch || !oBatch.UUID) { return; }
 
             var sUUID = oBatch.UUID;
-            var nNewAmount = parseFloat(oBatch.AmountAllocated);
+            var nNewAmount = parseFloat(oBatch.Quantity);
 
             if (isNaN(nNewAmount) || nNewAmount <= 0) {
                 sap.m.MessageToast.show(oBundle.getText("cantidadInvalida"));
-                return;
-            }
-            if (nNewAmount > oBatch.Quantity) {
-                sap.m.MessageToast.show(oBundle.getText("cantidadExcedeLote", [oBatch.Quantity]));
                 return;
             }
 
@@ -596,10 +591,11 @@ sap.ui.define([
                     return;
                 }
 
-                aBatches[iIndex].AmountAllocated = nNewAmount;
+                aBatches[iIndex].Quantity = nNewAmount;
 
                 var aVisible = aBatches.filter(function (b) { return !b.StartDate; });
                 oTable.setModel(new sap.ui.model.json.JSONModel({ ITEMS: aVisible }));
+                this._updateOrderSummaryScannedQty(aVisible);
 
                 this._saveAssignedBatches(aBatches).then(function () {
                     sap.m.MessageToast.show(oBundle.getText("cantidadActualizada"));
@@ -741,7 +737,6 @@ sap.ui.define([
                         aBatches[iIndex].Batch = sLote;
                         aBatches[iIndex].IdInv = idInventory;
                         aBatches[iIndex].Quantity = parseFloat(sCantidadLote) || 0;
-                        aBatches[iIndex].AmountAllocated = parseFloat(sCantidadLote) || 0;
                     } else {
                         // Fila eliminada externamente → agregar como nuevo
                         aBatches.push({
@@ -753,8 +748,7 @@ sap.ui.define([
                             EndDate: "",
                             UUID: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
                             GoodsReceipt: false,
-                            Quantity: parseFloat(sCantidadLote) || 0,
-                            AmountAllocated: parseFloat(sCantidadLote) || 0
+                            Quantity: parseFloat(sCantidadLote) || 0
                         });
                     }
                 } else {
@@ -768,8 +762,7 @@ sap.ui.define([
                         EndDate: "",
                         UUID: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
                         GoodsReceipt: false,
-                        Quantity: parseFloat(sCantidadLote) || 0,
-                        AmountAllocated: parseFloat(sCantidadLote) || 0
+                        Quantity: parseFloat(sCantidadLote) || 0
                     });
                 }
 

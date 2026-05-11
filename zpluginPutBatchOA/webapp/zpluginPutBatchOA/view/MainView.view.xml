@@ -85,11 +85,8 @@ height="100%">
                     <Column width="15%" hAlign="Left" vAlign="Middle" >
                         <Text text="{i18n>loteCode}"  />
                     </Column>
-                    <Column width="15%" hAlign="Left" vAlign="Middle" >
+                    <Column width="20%" hAlign="Left" vAlign="Middle" >
                         <Text text="{i18n>loteQty}" />
-                    </Column>
-                    <Column width="10%" hAlign="Center" vAlign="Middle">
-                        <Text text="{i18n>modificarcantidad}" />
                     </Column>
                     <Column width="10%" hAlign="Center" vAlign="Middle">
                         <Text text="{i18n>ActionModify}" visible="false"/>
@@ -103,8 +100,7 @@ height="100%">
                         <cells>
                             <Input value="{Material}" enabled="false" />
                             <Input value="{Batch}" enabled="false" />
-                            <Input value="{Quantity}" enabled="false" />
-                            <Input value="{AmountAllocated}" enabled="true" type="Number" />
+                            <Input value="{Quantity}" enabled="true" type="Number" />
                             <Button icon="sap-icon://add" press=".onAddQty"/>
                             <!-- <ndc:BarcodeScannerButton  
                                 scanSuccess=".onScanSlotSuccess"
