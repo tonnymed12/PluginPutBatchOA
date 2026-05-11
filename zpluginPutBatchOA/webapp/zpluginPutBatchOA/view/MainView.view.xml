@@ -27,7 +27,7 @@ height="100%">
 
             <HBox width="80%" class="sapUiSmallMarginBottom sapUiSmallMarginBeginEnd" alignItems="Center">
                 <Label text="{i18n>Barcode}" class="sapUiSmallMarginEnd"/>
-                <Input id="scanInput" submit=".onBarcodeSubmit" class="sapUiSmallMarginEnd sapUiSmallMarginBeginEnd" width="300px"/>
+                <Input id="scanInput" submit=".onBarcodeSubmit" liveChange=".onScanLiveupdate" class="sapUiSmallMarginEnd sapUiSmallMarginBeginEnd" width="300px"/>
                 <ndc:BarcodeScannerButton
                     id="sampleBarcodeScannerButton"
                     scanSuccess="onScanSuccess"
@@ -39,10 +39,10 @@ height="100%">
             </HBox>
 
             <!-- Resumen de orden -->
-            <HBox width="80%" class="sapUiTinyMarginBeginEnd sapUiTinyMarginTop">
+            <HBox width="80%" class="sapUiTinyMarginBeginEnd sapUiTinyMarginTop" visible="false">
                 <Title text="{i18n>orderSummary}" level="H5" class="sapUiSmallMarginBeginEnd"/>
             </HBox>
-            <HBox width="80%" class="sapUiSmallMarginBeginEnd sapUiSmallMarginBottom" alignItems="Center">
+            <HBox width="80%" class="sapUiSmallMarginBeginEnd sapUiSmallMarginBottom" alignItems="Center" visible="false">
                 <VBox width="20%">
                     <Label text="{i18n>loteCode}"/>
                     <Input id="orderLote" value="{orderSummary>/lote}" enabled="false" width="100%"/>
@@ -79,14 +79,17 @@ height="100%">
                     </Toolbar>
                 </headerToolbar>
                 <columns>
-                    <Column width="30%" hAlign="Left" vAlign="Middle" >
+                    <Column width="20%" hAlign="Left" vAlign="Middle" >
                         <Text text="{i18n>materialCode}" />
                     </Column>
-                    <Column width="30%" hAlign="Left" vAlign="Middle" >
+                    <Column width="15%" hAlign="Left" vAlign="Middle" >
                         <Text text="{i18n>loteCode}"  />
                     </Column>
                     <Column width="15%" hAlign="Left" vAlign="Middle" >
                         <Text text="{i18n>loteQty}" />
+                    </Column>
+                    <Column width="10%" hAlign="Center" vAlign="Middle">
+                        <Text text="{i18n>modificarcantidad}" />
                     </Column>
                     <Column width="10%" hAlign="Center" vAlign="Middle">
                         <Text text="{i18n>ActionModify}" visible="false"/>
@@ -101,11 +104,14 @@ height="100%">
                             <Input value="{Material}" enabled="false" />
                             <Input value="{Batch}" enabled="false" />
                             <Input value="{Quantity}" enabled="false" />
-                            <ndc:BarcodeScannerButton  
+                            <Input value="{AmountAllocated}" enabled="true" type="Number" />
+                            <Button icon="sap-icon://add" press=".onAddQty"/>
+                            <!-- <ndc:BarcodeScannerButton  
                                 scanSuccess=".onScanSlotSuccess"
                                 scanFail=".onScanError"
                                 dialogTitle="{i18n>BarcodeScanner}"
-                            />
+                                visible="false"
+                            /> -->
                             <Button icon="sap-icon://delete" press=".onDeleteSlot" type="Reject"/>
                         </cells>
                     </ColumnListItem>

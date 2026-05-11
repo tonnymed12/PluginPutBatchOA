@@ -20,6 +20,7 @@ sap.ui.define([
         onInit: function () {
             PluginViewController.prototype.onInit.apply(this, arguments);
             this.oScanInput = this.byId("scanInput");
+            this._oScanDebounceTimer = null;
             this.sAcActivity = "";       // Guardar valor SET_UP_STATUS de la actividad
 
             // Modelo "orderSummary" 
@@ -36,6 +37,8 @@ sap.ui.define([
         onAfterRendering: function () {
             this.onGetCustomValues();
             this.setOrderSummary();
+            this.oScanInput.setValue("");
+            this.oScanInput.focus();
         },
 
         onGetCustomValues: function () {
@@ -113,7 +116,7 @@ sap.ui.define([
             var aItems = (oModel && oModel.getProperty("/ITEMS")) || [];
             var oExiste = aItems.find(function (b) {
                 return (b.Material || "").toUpperCase() === sMaterial &&
-                       (b.Batch || "").toUpperCase() === sLote;
+                    (b.Batch || "").toUpperCase() === sLote;
             });
 
             if (oExiste) {
@@ -254,6 +257,8 @@ sap.ui.define([
 
             if (sCurrentStatus !== OPERATION_STATUS.ACTIVE) {
                 sap.m.MessageBox.error(oBundle.getText("verificarStatusOperacion"));
+                oInput.setValue("");
+                oInput.focus();
                 return;
             }
 
@@ -268,6 +273,8 @@ sap.ui.define([
 
                     if (sSetUpRefrescado !== "SETUP") {
                         sap.m.MessageBox.error(oBundle.getText("acActivityNotSetup"));
+                        oInput.setValue("");
+                        oInput.focus();
                         return;
                     }
 
@@ -280,6 +287,8 @@ sap.ui.define([
                 const sAcActivityNormalizado = ((sAcActivity || "") + "").trim().toUpperCase();
                 if (sAcActivityNormalizado !== "SETUP") {
                     sap.m.MessageBox.error(oBundle.getText("acActivityNotSetup"));
+                    oInput.setValue("");
+                    oInput.focus();
                     return;
                 }
             }
@@ -326,7 +335,7 @@ sap.ui.define([
                     this.ajaxPostRequest(urlLote, inParamsLote,
                         // SUCCESS callback de validación de lote
                         function (oResponseData) {
-                            const idInventory = oResponseData && oResponseData.outIdInventory  ? oResponseData.outIdInventory : "";
+                            const idInventory = oResponseData && oResponseData.outIdInventory ? oResponseData.outIdInventory : "";
                             oView.byId("idPluginPanel").setBusy(false);
 
                             var bEsValido = false;
@@ -474,7 +483,7 @@ sap.ui.define([
                 // Verificar duplicado en datos frescos
                 var oExiste = aBatches.find(function (b) {
                     return (b.Material || "").toUpperCase() === sMaterial &&
-                           (b.Batch || "").toUpperCase() === sLote;
+                        (b.Batch || "").toUpperCase() === sLote;
                 });
 
                 if (oExiste) {
@@ -493,7 +502,8 @@ sap.ui.define([
                     EndDate: "",
                     UUID: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
                     GoodsReceipt: false,
-                    Quantity: parseFloat(sCantidadLote) || 0
+                    Quantity: parseFloat(sCantidadLote) || 0,
+                    AmountAllocated: parseFloat(sCantidadLote) || 0
                 };
 
                 aBatches.push(oNewBatch);
@@ -529,7 +539,74 @@ sap.ui.define([
             sap.m.MessageToast.show(oBundle.getText("scanFailed", [oEvent]), { duration: 1000 });
         },
         onScanLiveupdate: function (oEvent) {
-            // User can implement the validation about inputting value
+            if (this._oScanDebounceTimer) {
+                clearTimeout(this._oScanDebounceTimer);
+            }
+            this._oScanDebounceTimer = setTimeout(function () {
+                this._oScanDebounceTimer = null;
+                this.onBarcodeSubmit();
+            }.bind(this), 400);
+        },
+        /**
+         * Actualiza la cantidad asignada (AmountAllocated) de un batch específico.
+         * El usuario modifica el input de la fila y presiona el botón para confirmar.
+         * FLUJO: Leer UUID + AmountAllocated del modelo → validar → _refreshBatchesFromBackend → update → PATCH
+         */
+        onAddQty: function (oEvent) {
+            var oView = this.getView();
+            var oBundle = oView.getModel("i18n").getResourceBundle();
+            var oTable = this.byId("idSlotTable");
+            var oModel = oTable.getModel();
+
+            // Capturar UUID y cantidad ANTES del refresh (binding bidireccional ya actualizó el modelo)
+            var oItem = oEvent.getSource().getParent();
+            var iCurrentIndex = oTable.indexOfItem(oItem);
+            if (iCurrentIndex === -1) { return; }
+
+            var aCurrentItems = (oModel && oModel.getProperty("/ITEMS")) || [];
+            var oBatch = aCurrentItems[iCurrentIndex];
+            if (!oBatch || !oBatch.UUID) { return; }
+
+            var sUUID = oBatch.UUID;
+            var nNewAmount = parseFloat(oBatch.AmountAllocated);
+
+            if (isNaN(nNewAmount) || nNewAmount <= 0) {
+                sap.m.MessageToast.show(oBundle.getText("cantidadInvalida"));
+                return;
+            }
+            if (nNewAmount > oBatch.Quantity) {
+                sap.m.MessageToast.show(oBundle.getText("cantidadExcedeLote", [oBatch.Quantity]));
+                return;
+            }
+
+            oView.byId("idPluginPanel").setBusy(true);
+
+            this._refreshBatchesFromBackend().then(function (oRefresh) {
+                oView.byId("idPluginPanel").setBusy(false);
+                if (!oRefresh) {
+                    sap.m.MessageToast.show(oBundle.getText("errorRefrescarSlots"));
+                    return;
+                }
+
+                var aBatches = oRefresh.batches;
+                var iIndex = aBatches.findIndex(function (b) { return b.UUID === sUUID; });
+
+                if (iIndex === -1) {
+                    sap.m.MessageToast.show(oBundle.getText("loteYaEliminado"));
+                    return;
+                }
+
+                aBatches[iIndex].AmountAllocated = nNewAmount;
+
+                var aVisible = aBatches.filter(function (b) { return !b.StartDate; });
+                oTable.setModel(new sap.ui.model.json.JSONModel({ ITEMS: aVisible }));
+
+                this._saveAssignedBatches(aBatches).then(function () {
+                    sap.m.MessageToast.show(oBundle.getText("cantidadActualizada"));
+                }).catch(function () {
+                    sap.m.MessageToast.show(oBundle.getText("errorActualizar"));
+                });
+            }.bind(this));
         },
         /**
          * Elimina un batch del array ASSIGNED_BATCHES por su UUID.
@@ -647,7 +724,7 @@ sap.ui.define([
                 var oExiste = aBatches.find(function (b) {
                     if (sTargetUUID && b.UUID === sTargetUUID) return false;
                     return (b.Material || "").toUpperCase() === sMaterial &&
-                           (b.Batch || "").toUpperCase() === sLote;
+                        (b.Batch || "").toUpperCase() === sLote;
                 });
 
                 if (oExiste) {
@@ -664,30 +741,35 @@ sap.ui.define([
                         aBatches[iIndex].Batch = sLote;
                         aBatches[iIndex].IdInv = idInventory;
                         aBatches[iIndex].Quantity = parseFloat(sCantidadLote) || 0;
+                        aBatches[iIndex].AmountAllocated = parseFloat(sCantidadLote) || 0;
                     } else {
                         // Fila eliminada externamente → agregar como nuevo
                         aBatches.push({
-                            Material: sMaterial, 
-                            Batch: sLote, 
-                            IdInv: idInventory, 
+                            Material: sMaterial,
+                            Batch: sLote,
+                            IdInv: idInventory,
                             Status: "INST",
-                            StartDate: "", 
+                            StartDate: "",
                             EndDate: "",
                             UUID: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
-                            GoodsReceipt: false, Quantity: parseFloat(sCantidadLote) || 0
+                            GoodsReceipt: false,
+                            Quantity: parseFloat(sCantidadLote) || 0,
+                            AmountAllocated: parseFloat(sCantidadLote) || 0
                         });
                     }
                 } else {
                     // Sin UUID destino → agregar como nuevo
                     aBatches.push({
-                        Material: sMaterial, 
-                        Batch: sLote, 
-                        IdInv: idInventory, 
+                        Material: sMaterial,
+                        Batch: sLote,
+                        IdInv: idInventory,
                         Status: "INST",
-                        StartDate: "", 
+                        StartDate: "",
                         EndDate: "",
                         UUID: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
-                        GoodsReceipt: false, Quantity: parseFloat(sCantidadLote) || 0
+                        GoodsReceipt: false,
+                        Quantity: parseFloat(sCantidadLote) || 0,
+                        AmountAllocated: parseFloat(sCantidadLote) || 0
                     });
                 }
 
