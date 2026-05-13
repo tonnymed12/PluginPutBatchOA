@@ -245,15 +245,7 @@ sap.ui.define([
             const bEsPuestoCritico = ["TA01", "TA02", "SL02"].includes(puesto);
 
             // Validación de estatus de operación (en tiempo real desde POD)
-            var oPodSelectionModel = this.getPodSelectionModel();
-            var sCurrentStatus = "";
-            if (oPodSelectionModel && oPodSelectionModel.selectedPhaseData) {
-                sCurrentStatus = oPodSelectionModel.selectedPhaseData.status || "";
-            }
-            // Fallback a gOperationPhase si no hay POD data
-            if (!sCurrentStatus && gOperationPhase) {
-                sCurrentStatus = gOperationPhase.status || "";
-            }
+            const sCurrentStatus = this._getCurrentOperationStatus();
 
             if (sCurrentStatus !== OPERATION_STATUS.ACTIVE) {
                 sap.m.MessageBox.error(oBundle.getText("verificarStatusOperacion"));
@@ -926,6 +918,33 @@ sap.ui.define([
                         reject(oRes);
                     }.bind(this));
             });
+        },
+        _getCurrentOperationStatus: function () {
+            var oPodSelectionModel = this.getPodSelectionModel();
+            var sCurrentStatus = "";
+
+
+            if (oPodSelectionModel && oPodSelectionModel.selectedPhaseData) {
+                sCurrentStatus = oPodSelectionModel.selectedPhaseData.status || "";
+            }
+
+            if (!sCurrentStatus) {
+                var operation = (oPodSelectionModel && typeof oPodSelectionModel.getOperation === "function")
+                    ? (oPodSelectionModel.getOperation() && oPodSelectionModel.getOperation().operation)
+                    : null;
+                if (!operation && gOperationPhase && gOperationPhase.operation) {
+                    operation = gOperationPhase.operation.operation || gOperationPhase.operation;
+                }
+                if (operation) {
+                    sCurrentStatus = operation.status || operation.operationStatus || "";
+                }
+            }
+
+            if (!sCurrentStatus && gOperationPhase) {
+                sCurrentStatus = gOperationPhase.status || "";
+            }
+
+            return sCurrentStatus;
         },
         /**
          * Persiste el array de batches en el customValue ASSIGNED_BATCHES de la Operation Activity.
