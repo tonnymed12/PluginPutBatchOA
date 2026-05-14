@@ -23,20 +23,10 @@ height="100%">
             <HBox width="80%" class="sapUiSmallMarginBottom">
               <MessageStrip text="{i18n>scannerReady}" type="Information" showIcon="true"
                 customIcon="sap-icon://bar-code" class="sapUiSmallMarginTop sapUiSmallMarginBeginEnd sapUiSmallMarginBottom" />
-            </HBox>
-
-            <HBox width="80%" class="sapUiSmallMarginBottom sapUiSmallMarginBeginEnd" alignItems="Center">
                 <Label text="{i18n>Barcode}" class="sapUiSmallMarginEnd"/>
                 <Input id="scanInput" submit=".onBarcodeSubmit" liveChange=".onScanLiveupdate" class="sapUiSmallMarginEnd sapUiSmallMarginBeginEnd" width="300px"/>
-                <ndc:BarcodeScannerButton
-                    id="sampleBarcodeScannerButton"
-                    scanSuccess="onScanSuccess"
-                    scanFail="onScanError"
-                    inputLiveUpdate="onScanLiveupdate"
-                    dialogTitle="{i18n>BarcodeScanner}"
-                    class="sapUiMediumMarginBegin sapUiSmallMarginEnd"
-                />
             </HBox>
+
 
             <!-- Resumen de orden -->
             <HBox width="80%" class="sapUiTinyMarginBeginEnd sapUiTinyMarginTop" visible="false">
